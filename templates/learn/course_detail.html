@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>{{ course.name }}</h2>
+<p>Credits: {{ course.credit }}</p>
+<p>Faculty: {{ course.faculty }}</p>
+<a href="{{ course.syllabus.url }}" target="_blank">View Syllabus (PDF)</a>
+
+<h3>Study Materials</h3>
+<ul>
+    <li><a href="{% url 'materials' pk=course.pk %}">Study Materials</a></li>
+    <li><a href="{% url 'lectures' pk=course.pk %}">Lectures</a></li>
+</ul>
+{% endblock %}

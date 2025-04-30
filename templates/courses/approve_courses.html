@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Approve or Reject Proposed Courses</h2>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <!-- Filter Options -->
+    <div style="margin-bottom: 20px;">
+      <label><input type="checkbox" class="filter" data-type="create"> To Be Created</label>
+      <label><input type="checkbox" class="filter" data-type="update"> To Be Updated</label>
+      <label><input type="checkbox" class="filter" data-type="delete"> To Be Deleted</label>
+    </div>
+
+    <!-- Course Cards -->
+    <div id="course-list">
+      {% for course in form.fields.courses_to_accept.queryset %}
+        <div class="course-box" data-status="{% if course.course %}update{% elif course.is_deleted %}delete{% else %}create{% endif %}" style="border: 1px solid #ccc; padding: 15px; margin-bottom: 10px; border-radius: 5px;">
+          <h4>{{ course.name }}</h4>
+          <p><strong>Credit:</strong> {{ course.credit }}</p>
+          <p><strong>Faculty:</strong> {{ course.faculty }}</p>
+          <p><strong>Syllabus:</strong> {{ course.syllabus }}</p>
+          <p><strong>Prerequisites:</strong>
+            {% for p in course.prerequisites.all %}
+              {{ p.name }}{% if not forloop.last %}, {% endif %}
+            {% empty %}
+              None
+            {% endfor %}
+          </p>
+
+          <!-- Accept and Reject checkboxes -->
+          <div style="margin-top: 10px; display: flex; gap: 20px; align-items: center;">
+            <label style="display: flex; align-items: center; gap: 5px;">
+              <input type="checkbox" name="courses_to_accept" value="{{ course.id }}" class="accept-checkbox">
+              Accept
+            </label>
+            <label style="display: flex; align-items: center; gap: 5px;">
+              <input type="checkbox" name="courses_to_reject" value="{{ course.id }}" class="reject-checkbox">
+              Reject
+            </label>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <button type="submit" style="margin-top: 20px;">Submit</button>
+  </form>
+
+  <script>
+    // Filtering logic
+    document.querySelectorAll('.filter').forEach(checkbox => {
+      checkbox.addEventListener('change', () => {
+        const selectedTypes = Array.from(document.querySelectorAll('.filter:checked')).map(cb => cb.dataset.type);
+        document.querySelectorAll('.course-box').forEach(box => {
+          const status = box.dataset.status;
+          box.style.display = selectedTypes.length === 0 || selectedTypes.includes(status) ? 'block' : 'none';
+        });
+      });
+    });
+
+    // Ensure that both accept and reject are not selected at the same time for the same course
+    document.querySelectorAll('.accept-checkbox').forEach(checkbox => {
+      checkbox.addEventListener('change', (event) => {
+        if (event.target.checked) {
+          // If "Accept" is selected, uncheck the "Reject" checkbox for the same course
+          const correspondingRejectCheckbox = event.target.closest('.course-box').querySelector('.reject-checkbox');
+          correspondingRejectCheckbox.checked = false;
+        }
+      });
+    });
+
+    document.querySelectorAll('.reject-checkbox').forEach(checkbox => {
+      checkbox.addEventListener('change', (event) => {
+        if (event.target.checked) {
+          // If "Reject" is selected, uncheck the "Accept" checkbox for the same course
+          const correspondingAcceptCheckbox = event.target.closest('.course-box').querySelector('.accept-checkbox');
+          correspondingAcceptCheckbox.checked = false;
+        }
+      });
+    });
+  </script>
+
+{% endblock %}

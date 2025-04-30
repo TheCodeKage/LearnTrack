@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}My Courses{% endblock %}
+
+{% block content %}
+<h2>My Courses</h2>
+
+<!-- Add Course Button (visible only for faculty members) -->
+{% if user_type == 'faculty' %}
+  <a href="{% url 'course_create' %}" class="add-course-btn">+</a>
+{% endif %}
+
+<!-- Display the list of Courses -->
+<ul class="course-list">
+  {% for course in courses %}
+    <li>
+      <strong>{{ course.name }}</strong><br>
+      <span>{{ course.syllabus.name }}</span>
+
+      {% if user_type == 'faculty' %}
+        <!-- Edit and Delete buttons for each course if faculty -->
+        <a href="{% url 'course_edit' course.pk %}" class="edit-btn">Edit</a>
+        <a href="{% url 'course_delete' course.pk %}" class="delete-btn">Delete</a>
+      {% endif %}
+    </li>
+  {% empty %}
+    <li>No courses found.</li>
+  {% endfor %}
+</ul>
+
+<!-- Display Proposed Courses -->
+<h3>Proposed Courses</h3>
+<ul class="proposed-course-list">
+  {% for proposed_course in proposed_courses %}
+    <li style="color: #ff00ff;"> <!-- Bright pink color -->
+      <strong>{{ proposed_course.name }}</strong><br>
+      <span>{{ proposed_course.syllabus.name }}</span>
+
+      {% if user_type == 'faculty' %}
+        <!-- Edit and Delete buttons for each proposed course if faculty -->
+        <a href="{% url 'proposed_course_update' proposed_course.pk %}" class="edit-btn">Edit</a>
+        <a href="{% url 'proposed_course_delete' proposed_course.pk %}" class="delete-btn">Delete</a>
+      {% endif %}
+    </li>
+  {% empty %}
+    <li>No proposed courses found.</li>
+  {% endfor %}
+</ul>
+
+{% if is_paginated %}
+  <div class="pagination">
+    {% if page_obj.has_previous %}
+      <a href="?page=1">&laquo; First</a>
+      <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+    {% endif %}
+
+    <span>Page {{ page_obj.number }} of {{ paginator.num_pages }}</span>
+
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}">Next</a>
+      <a href="?page={{ paginator.num_pages }}">Last &raquo;</a>
+    {% endif %}
+  </div>
+{% endif %}
+{% endblock %}
