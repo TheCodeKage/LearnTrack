@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import Q
 from django.http import Http404
@@ -8,7 +9,7 @@ from django.views.generic import ListView, CreateView, UpdateView
 from django.views.generic.edit import ModelFormMixin
 
 from courses.forms import CourseForm, ProposedCourseSelectionForm
-from courses.models import Course, ProposedCourse
+from courses.models import Course, ProposedCourse, Enrollment
 from profiles.models import StudentProfile, FacultyProfile
 
 
@@ -168,7 +169,7 @@ class ApproveCourseView(LoginRequiredMixin, UserPassesTestMixin, View):
     form_class = ProposedCourseSelectionForm
 
     def test_func(self):
-        return type(self.request.user.profile.get_real_instance()) == FacultyProfile
+        return self.request.user.is_staff
 
     def get(self, request, *args, **kwargs):
         form = self.form_class()
@@ -236,4 +237,37 @@ class ProposedCourseDelete(LoginRequiredMixin, UserPassesTestMixin, View):
 class CourseExploreView(LoginRequiredMixin, ListView):
     template_name = 'courses/explore.html'
     model = Course
-    context_object_name = 'courses'
+
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user.profile.get_real_instance()
+        search_query = self.request.GET.get('q')
+
+        if isinstance(user, StudentProfile):
+            base_queryset = Course.objects.exclude(enrollments__student=user)
+        elif isinstance(user, FacultyProfile):
+            base_queryset = Course.objects.exclude(faculty=user)
+        else:
+            base_queryset = Course.objects.none()
+
+        if search_query:
+            base_queryset = base_queryset.filter(name__icontains=search_query)
+
+        context['courses'] = base_queryset
+        context['user'] = user.__class__.__name__
+        return context
+
+
+class EnrollCourseView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        user = request.user.profile.get_real_instance()
+        course = get_object_or_404(Course, pk=pk)
+
+        if hasattr(user, 'studentprofile'):
+            Enrollment.objects.get_or_create(course=course, student=user)
+            messages.success(request, f"You've been enrolled in {course.name}!")
+        else:
+            messages.error(request, "Only students can enroll in courses.")
+
+        return redirect('course_explore')

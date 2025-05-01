@@ -89,7 +89,7 @@ class CourseDetailView(LoginRequiredMixin, DetailView):
     def get_template_names(self):
         user = self.request.user.profile.get_real_instance()
         course = self.get_object()
-        if user in course.enrollments.all() or course.faculty == user:
+        if user in [enrollment.student for enrollment in course.enrollments.all()] or course.faculty == user:
             return ['learn/course_detail.html']
         else:
             return ['learn/course_enroll.html']

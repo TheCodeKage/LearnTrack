@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'profiles.apps.ProfilesConfig',
     'phonenumber_field',
     'courses.apps.CoursesConfig',
-    'learn.apps.LearnConfig'
+    'learn.apps.LearnConfig',
+    'assignments.apps.AssignmentsConfig'
 ]
 
 MIDDLEWARE = [

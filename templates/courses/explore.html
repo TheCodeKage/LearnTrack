@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Explore Courses</h2>
+
+<form method="get" class="mb-4">
+    <input type="text" name="q" placeholder="Search courses..." value="{{ search_query }}" class="form-control" />
+</form>
+
+<h3>Courses</h3>
+<ul>
+    {% for course in courses %}
+        <li>
+            {{ course.name }} ({{ course.faculty }})
+            {% if user == 'StudentProfile' %}
+                <form action="{% url 'course_enroll' course.pk %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-primary">Enroll</button>
+                </form>
+            {% endif %}
+        </li>
+    {% empty %}
+        <li>No CS courses found.</li>
+    {% endfor %}
+</ul>
+{% endblock %}
